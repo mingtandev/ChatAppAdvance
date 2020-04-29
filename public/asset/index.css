@@ -58,7 +58,7 @@ body {
     }
   }
   #frame #sidepanel #profile.expanded .wrap {
-    height: 210px;
+    height: 280px;
     line-height: initial;
   }
   #frame #sidepanel #profile.expanded .wrap p {
@@ -673,3 +673,15 @@ body {
   #frame .content .message-inputBar .wrap button:focus {
     outline: none;
   }
+
+
+.changeProfile{
+  visibility: hidden;
+  opacity: 0;
+  transition: 0.2s;
+}
+
+.ShowProfile{
+  visibility: visible;
+  opacity: 1;
+}

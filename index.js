@@ -1,5 +1,8 @@
 var express = require("express");
 var app = express();
+
+var multer  = require('multer')
+var upload = multer({ dest: './public/uploads/' })
 const bodyParser = require('body-parser')
 var cookieParser = require('cookie-parser')
 
@@ -26,31 +29,116 @@ mongoose.connect("mongodb://localhost:27017/chatapp", { useNewUrlParser: true },
     console.log("Connection succesfull");
 })
 
+
+//models
+
+var userModel = require("./models/users");
+var chatModel = require("./models/chatHis")
+var Authencation = require("./middleware/requireAuth")
+var controller_login = require("./controller/login.controller")
+
+
 //socket io
 
 io.on("connection", function (socket) {
     console.log("Co thang dang nhap");
 
     socket.on("from-client-chat-mess", function (msg) {
-        socket.broadcast.emit("from-server-chat-mess", msg);
-        socket.emit("PRI-from-server-chat-mess", msg)
+        var newChat = chatModel({
+            content : msg.content,
+            name : msg.name,
+            img : msg.img,
+        })
+        newChat.save();
+        io.sockets.emit("from-server-chat-mess",msg);
     })
 })
 
 //script
-//models
 
-var userModel = require("./models/users");
-var Authencation = require("./middleware/requireAuth")
-var controller_login = require("./controller/login.controller")
-app.get("/", Authencation.isSignin ,  (req, res) => {
+
+
+//Authencation.isSignin
+app.get("/" ,  (req, res) => {
     res.render("signin");
 })
 
-app.get("/chatbox",Authencation.requireAuth , (req,res)=>{
-    res.render("chatbox");
+app.get("/register",(req,res)=>{
+    if(req.query.valid==1){
+        res.render("register.ejs",{
+            valid : 1,
+        })
+    }
+    else{
+        res.render("register.ejs")
+    }
+})
+
+
+//Authencation.requireAuth
+app.get("/chatbox" , async (req,res)=>{
+
+    var myChatlog = await chatModel.find();
+    userModel.find(function(err,data){
+        if(err)
+            throw err;
+
+        var myUser;
+        var listUser = data.filter(function(e){
+            if(e._id == req.signedCookies.userID){
+                myUser = e;
+                return false;
+            }
+            return true;
+        })
+       
+        res.render("chatbox",{
+            listUser : listUser,
+            myUser : myUser,
+            ChatLog : myChatlog,
+        });
+    })
+    
 })
 
 app.post("/login", controller_login.login)
+
+// req.file.path.split("\\").splice(1).join("/")
+app.post("/edit/:id", upload.single('avatar') , (req,res)=>{
+    if(!req.file.path){
+        var query = { _id : req.params.id};
+        var update = {name : req.body.name};
+        userModel.findOneAndUpdate(query,update , function(err){
+            if(err)
+                res.send("Error : " , + err);
+            else 
+                res.redirect("/chatbox");
+        })
+    }
+    else{
+        var query = { _id : req.params.id};
+        var update = {name : req.body.name , img : req.file.path.split("\\").splice(1).join("/")};
+        userModel.findOneAndUpdate(query,update , function(err){
+            if(err)
+                res.send("Error : " , + err);
+            else 
+                res.redirect("/chatbox");
+        })
+    }
+})
+
+app.post("/registering" , (req,res)=>{
+    
+    var newUser = new userModel({
+        id:req.body.userName,
+        pass : req.body.pass,
+        name : req.body.name,
+        img : "/uploads/default"
+    })
+
+    newUser.save();
+
+    res.redirect("/register?valid=1");
+})
 
 server.listen(3000);
