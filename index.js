@@ -42,7 +42,15 @@ var controller_login = require("./controller/login.controller")
 
 io.on("connection", function (socket) {
     console.log("Co thang dang nhap");
-
+    
+    socket.on("form-client-showUserOnline",function(data){
+        userModel.findOneAndUpdate({_id : data.id},{status : "online"},function(err,data){
+            if(err){
+                res.send("Save status error");
+            }
+        });
+        socket.broadcast.emit("from_sever_showUserOnline" , data);
+    })
     socket.on("from-client-chat-mess", function (msg) {
         var newChat = chatModel({
             content : msg.content,
@@ -60,6 +68,8 @@ io.on("connection", function (socket) {
 
 //Authencation.isSignin
 app.get("/" ,  (req, res) => {
+
+
     res.render("signin");
 })
 
@@ -87,6 +97,12 @@ app.get("/chatbox" , async (req,res)=>{
         var listUser = data.filter(function(e){
             if(e._id == req.signedCookies.userID){
                 myUser = e;
+                //set online your account
+                userModel.findOneAndUpdate({_id:e._id},{status : "online"},function(err){
+                    if(err){
+                        res.send("Set online your account error");
+                    }
+                })
                 return false;
             }
             return true;
@@ -133,7 +149,8 @@ app.post("/registering" , (req,res)=>{
         id:req.body.userName,
         pass : req.body.pass,
         name : req.body.name,
-        img : "/uploads/default"
+        img : "/uploads/default",
+        status : "busy",
     })
 
     newUser.save();

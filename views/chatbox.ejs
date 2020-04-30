@@ -43,7 +43,7 @@
                     <% listUser.forEach(element => { %>
                         <li class="contact">
                             <div class="wrap">
-                                <span class="contact-status busy"></span>
+                                <span style=" background:<%= element.status=='busy' ? 'red' : 'green'%>" class="<%=element.status%>>" id="<%=element._id%>"></span>
                                 <img src="<%=element.img%>"  alt="">
                                 <div class="meta">
                                     <p class="name"><%=element.name%></p>
@@ -114,6 +114,14 @@
 
     const socket = io();
 
+    document.addEventListener("DOMContentLoaded", function(){
+        socket.emit("form-client-showUserOnline",{
+            id : "<%=myUser._id%>",
+        })
+    //....
+});
+
+
 $('#formMess').submit(function(e) {
     e.preventDefault(); // prevents page reloading
     socket.emit('from-client-chat-mess', { 
@@ -125,7 +133,10 @@ $('#formMess').submit(function(e) {
     return false;
 });
 
-
+socket.on("from_sever_showUserOnline",function(data){
+    var user = document.getElementById(data.id);
+    user.style.background = "green";
+})
 
 socket.on("from-server-chat-mess",function(msg){
     var stringAppend = `<li class="contact">
@@ -144,7 +155,13 @@ socket.on("from-server-chat-mess",function(msg){
     objDiv.scrollTop = objDiv.scrollHeight;
 })
 
+//set color status
 
+var status = document.getElementsByName("busy");
+console.log(status);
+for(let i = 0 ; i <status.length ; i++){
+    status[i].style.color = "red";
+}
 
 </script>
 </body>
