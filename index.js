@@ -65,11 +65,11 @@ io.on("connection", function (socket) {
 //script
 
 
-
+    
 //Authencation.isSignin
 app.get("/" ,  (req, res) => {
 
-
+    // userModel.updateMany({},{status : "busy"},function(err){});
     res.render("signin");
 })
 

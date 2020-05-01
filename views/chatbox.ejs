@@ -1,58 +1,59 @@
-
-
 <%- include("blocks/header.ejs")%>
+
 <body>
 
-<script src="socket.io/socket.io.js"></script>
+    <script src="socket.io/socket.io.js"></script>
 
-<div id="frame">
-    <div id="sidepanel">
-        <div id="profile">
-            <div class="wrap">
-                <img id="profile-img" src="<%=myUser.img%>" class="online" alt="">
-                <p id="profileName"><%=myUser.name%></p>
-                <i class="fa fa-chevron-down expand-button" aria-hidden="true"></i>
-                <div id="status-options">
-                    <ul>
-                      
-                    </ul>
-                </div>
-                <div id="expanded" style="justify-content: space-between;" >
-                    <button type="button" id="changeProfile" class="btn btn-primary">Edit profile </button>
-                    <button type="button" class="btn btn-primary">Logout </button>
-                </div>
+    <div id="frame">
+        <div id="sidepanel">
+            <div id="profile">
+                <div class="wrap">
+                    <img id="profile-img" src="<%=myUser.img%>" class="online" alt="">
+                    <p id="profileName"><%=myUser.name%></p>
+                    <i class="fa fa-chevron-down expand-button" aria-hidden="true"></i>
+                    <div id="status-options">
+                        <ul>
 
-                <form action="/edit/<%=myUser._id%>"   enctype="multipart/form-data"  method="POST"  style="margin-top: 20px;" id="changeProfileForm" class="changeProfile">
-                    <div class="form-group">
-                      <input  class="form-control" name="name" placeholder="New name">
+                        </ul>
                     </div>
-                    <div class="form-group">
-                        <input type="file" name="avatar">
+                    <div id="expanded" style="justify-content: space-between;">
+                        <button type="button" id="changeProfile" class="btn btn-primary">Edit profile </button>
+                        <button type="button" class="btn btn-primary">Logout </button>
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                  </form>
+
+                    <form action="/edit/<%=myUser._id%>" enctype="multipart/form-data" method="POST"
+                        style="margin-top: 20px;" id="changeProfileForm" class="changeProfile">
+                        <div class="form-group">
+                            <input class="form-control" name="name" placeholder="New name">
+                        </div>
+                        <div class="form-group">
+                            <input type="file" name="avatar">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </div>
             </div>
-        </div>
-        <div id="search">
-            <label for=""><i class="fa fa-search" aria-hidden="true"></i></label>
-            <input type="text" placeholder="Search contacts...">
-        </div>
-        <div id="contacts">
-            <ul>
-                <%if(typeof listUser!='undefined'){ %>
+            <div id="search">
+                <label for=""><i class="fa fa-search" aria-hidden="true"></i></label>
+                <input type="text" placeholder="Search contacts...">
+            </div>
+            <div id="contacts">
+                <ul>
+                    <%if(typeof listUser!='undefined'){ %>
                     <% listUser.forEach(element => { %>
-                        <li class="contact">
-                            <div class="wrap">
-                                <span style=" background:<%= element.status=='busy' ? 'red' : 'green'%>" class="<%=element.status%>>" id="<%=element._id%>"></span>
-                                <img src="<%=element.img%>"  alt="">
-                                <div class="meta">
-                                    <p class="name"><%=element.name%></p>
-                                    <!-- <p class="preview">Wrong. You take the gun, or you pull out a bigger one. Or, you call their bluff. Or, you do any one of a hundred and forty six other things.</p> -->
-                                </div>
+                    <li class="contact contact-left">
+                        <div class="wrap">
+                            <span style="background:<%= element.status=='busy' ? 'red' : 'green'%>"
+                                class="<%=element.status%>>" id="<%=element._id%>"></span>
+                            <img src="<%=element.img%>" alt="">
+                            <div class="meta">
+                                <p class="name"><%=element.name%></p>
+                                <!-- <p class="preview">Wrong. You take the gun, or you pull out a bigger one. Or, you call their bluff. Or, you do any one of a hundred and forty six other things.</p> -->
                             </div>
-                        </li>
+                        </div>
+                    </li>
                     <% }); %>
-                <%}%>
+                    <%}%>
 
             </ul>
         </div>
@@ -87,83 +88,111 @@
                             </div>
                         </div>
                     </li>
-                <% }); %>
+                    <% }); %>
 
-            </ul>
-		</div>
+                </ul>
+            </div>
             <form id="formMess" class="message-inputBar">
                 <div class="wrap">
-                <input type="text" id="mess" placeholder="Write your message...">
-                <i class="fa fa-paperclip attachment" aria-hidden="true"></i>
-                <button class="submit"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
+                    <input type="text" id="mess" placeholder="Write your message...">
+                    <i class="fa fa-paperclip attachment" aria-hidden="true"></i>
+                    <button class="submit"><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
                 </div>
             </form>
-	</div>
-</div>
-<%- include("blocks/scripts")%>
-
-<script>
-    var btnChange = document.getElementById("changeProfile");
-    btnChange.addEventListener("click",function(){
-        var changeProfileForm = document.getElementById("changeProfileForm");
-        changeProfileForm.classList.toggle("ShowProfile");
-    })
-</script>
-
-<script >
-
-    const socket = io();
-
-    document.addEventListener("DOMContentLoaded", function(){
-        socket.emit("form-client-showUserOnline",{
-            id : "<%=myUser._id%>",
-        })
-    //....
-});
-
-
-$('#formMess').submit(function(e) {
-    e.preventDefault(); // prevents page reloading
-    socket.emit('from-client-chat-mess', { 
-        content : $('#mess').val(),
-        name : document.getElementById("profileName").textContent,
-        img : '<%=myUser.img%>',
-    });
-    $('#mess').val('');
-    return false;
-});
-
-socket.on("from_sever_showUserOnline",function(data){
-    var user = document.getElementById(data.id);
-    user.style.background = "green";
-})
-
-socket.on("from-server-chat-mess",function(msg){
-    var stringAppend = `<li class="contact">
-<div class="wrap">
-    <span class="contact-status"></span>
-    <img src="${msg.img}" alt="">
-    <div class="meta">
-        <p class="name">${msg.name}</p>
-        <p class="preview"> ${msg.content} </p>
+        </div>
     </div>
-</div>
-</li>`
+    <%- include("blocks/scripts")%>
 
-    $('#chatlog').append(stringAppend);
-    var objDiv = document.getElementById("messages-log");
-    objDiv.scrollTop = objDiv.scrollHeight;
-})
+    <script>
+        var btnChange = document.getElementById("changeProfile");
+        btnChange.addEventListener("click", function () {
+            var changeProfileForm = document.getElementById("changeProfileForm");
+            changeProfileForm.classList.toggle("ShowProfile");
+        })
+    </script>
 
-//set color status
+    <script>
 
-var status = document.getElementsByName("busy");
-console.log(status);
-for(let i = 0 ; i <status.length ; i++){
-    status[i].style.color = "red";
-}
+        const socket = io();
 
-</script>
+        //sort user trạng thái , cho người online lên đầu
+        function sortUser() {
+                var allUser = document.getElementsByClassName("contact-left");
+                for (let i = 0; i < allUser.length - 1; i++) {
+                    for (let j = i + 1; j < allUser.length; j++) {
+                        if (allUser[i].children[0].children[0].style.background == "red" && allUser[j].children[0].children[0].style.background == "green") {
+                            allUser[j].parentNode.insertBefore(allUser[j], allUser[i]);
+                        }
+
+                    }
+                }
+            }
+
+
+            //Khi phát hiện có người mới load vào từ client
+        document.addEventListener("DOMContentLoaded", function () {
+            socket.emit("form-client-showUserOnline", {
+                id: "<%=myUser._id%>",
+            })
+
+
+
+            var contacts = document.getElementById("contacts");
+
+            sortUser();
+
+        });
+
+
+        //emit mess lên server
+        $('#formMess').submit(function (e) {
+            e.preventDefault(); // prevents page reloading
+            socket.emit('from-client-chat-mess', {
+                content: $('#mess').val(),
+                name: document.getElementById("profileName").textContent,
+                img: '<%=myUser.img%>',
+            });
+            $('#mess').val('');
+            return false;
+        });
+
+        //set status online cho user
+        socket.on("from_sever_showUserOnline", function (data) {
+            var user = document.getElementById(data.id);
+            user.style.background = "green";
+
+            sortUser();
+        })
+
+        //Append mess vào chatllg
+        socket.on("from-server-chat-mess", function (msg) {
+            var stringAppend = `<li class="contact">
+                            <div class="wrap">
+                                <span class="contact-status"></span>
+                                <img src="${msg.img}" alt="">
+                                <div class="meta">
+                                    <p class="name">${msg.name}</p>
+                                    <p class="preview"> ${msg.content} </p>
+                                </div>
+                            </div>
+                            </li>`
+
+            $('#chatlog').append(stringAppend);
+            var objDiv = document.getElementById("messages-log");
+            objDiv.scrollTop = objDiv.scrollHeight;
+        })
+
+
+        //set color status ban đầu do class bị lỗi nên tự set bằng script
+        var status = document.getElementsByName("busy");
+        for (let i = 0; i < status.length; i++) {
+            status[i].style.color = "red";
+        }
+
+
+//sort user online
+
+    </script>
 </body>
 
 </html>
