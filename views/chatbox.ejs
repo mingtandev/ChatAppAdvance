@@ -134,13 +134,8 @@
             socket.emit("form-client-showUserOnline", {
                 id: "<%=myUser._id%>",
             })
-
-
-
             var contacts = document.getElementById("contacts");
-
             sortUser();
-
         });
 
 
@@ -161,6 +156,13 @@
             var user = document.getElementById(data.id);
             user.style.background = "green";
 
+            sortUser();
+        })
+
+        // Khi có người offline(disconect)
+        socket.on("from_sever_showUserOffline", function (data) {
+            var user = document.getElementById(data.id);
+            user.style.background = "red";
             sortUser();
         })
 
