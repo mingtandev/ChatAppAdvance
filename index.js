@@ -36,7 +36,7 @@ var userModel = require("./models/users");
 var chatModel = require("./models/chatHis")
 var Authencation = require("./middleware/requireAuth")
 var controller_login = require("./controller/login.controller")
-
+var privateChatModel = require("./models/PrivateChat");
 
 
 
@@ -78,9 +78,21 @@ io.on("connection", function (socket) {
         })
         newChat.save();
         io.sockets.emit("from-server-chat-mess", msg);
-        console.log(referID);
     })
 
+
+
+    socket.on("from-client-chat-mess-private", function (msg) {
+        var newChat = privateChatModel({
+            from : msg.from,
+            to : msg.to,
+            content: msg.content,
+            name: msg.name,
+            img: msg.img,
+        })
+        newChat.save();
+        io.sockets.emit("from-server-chat-mess", msg);
+    })
 
 
     //xu ly thoat trang web
@@ -115,7 +127,7 @@ io.on("connection", function (socket) {
 //Authencation.isSignin
 app.get("/", (req, res) => {
 
-    // userModel.updateMany({},{socketID : ""},function(err){});
+    userModel.updateMany({},{socketID : undefined},function(err){});
     res.render("signin");
 })
 
@@ -162,6 +174,62 @@ app.get("/chatbox", async (req, res) => {
         });
     })
 })
+
+
+
+//Private chat render
+app.get("/chatbox/:id",  async (req, res) => {
+
+   
+    // var myChatlog = await privateChatModel.find(
+    //     {from : req.signedCookies.userID,
+    //      to : req.param.id   
+    // });
+    var myChatlog = await privateChatModel.find({
+       $or : [
+           {
+               from : req.signedCookies.userID,
+               to : req.params.id
+           },
+
+           {
+                from : req.params.id,
+                to : req.signedCookies.userID
+           }
+
+       ]
+    });
+
+    userModel.find(function (err, data) {
+        if (err)
+            throw err;
+
+        var myUser;
+        var listUser = data.filter(function (e) {
+            if (e._id == req.signedCookies.userID) {
+                myUser = e;
+                //set online your account
+                userModel.findOneAndUpdate({ _id: e._id }, { status: "online" }, function (err) {
+                    if (err) {
+                        res.send("Set online your account error");
+                    }
+                })
+                return false;
+            }
+            return true;
+        })
+
+
+        res.render("privatechat", {
+            listUser: listUser,
+            myUser: myUser,
+            ChatLog: myChatlog,
+        });
+    })
+})
+
+
+
 
 app.post("/login", controller_login.login)
 

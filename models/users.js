@@ -6,6 +6,7 @@ var userSchema = new mongoose.Schema({
     name : String,
     img : String,
     status : String,
+    socketID : String
 })
 
 module.exports = mongoose.model("users",userSchema);
