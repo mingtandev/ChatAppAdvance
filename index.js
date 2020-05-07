@@ -230,9 +230,10 @@ app.get("/chatbox/:id",  async (req, res) => {
 app.post("/login", controller_login.login)
 
 // req.file.path.split("\\").splice(1).join("/")
-app.post("/edit/:id", upload.single('avatar'), (req, res) => {
+app.post("/edit/:id", upload.single('avatar'), async (req, res) => {
 
     if (!req.file) {
+        var curUser = await userModel.findOne({_id: req.params.id});
         var query = { _id: req.params.id };
         var update = { name: req.body.name };
         userModel.findOneAndUpdate(query, update, function (err) {
@@ -241,6 +242,9 @@ app.post("/edit/:id", upload.single('avatar'), (req, res) => {
             else
                 res.redirect("/chatbox");
         })
+        //change in chatlog
+        chatModel.updateMany({name : curUser.name},{name : req.body.name},function(){});
+        privateChatModel.updateMany({name : curUser.name},{name : req.body.name},function(){});
     }
     else {
         console.log(req.file.path);
