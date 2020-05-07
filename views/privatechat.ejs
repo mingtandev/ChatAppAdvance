@@ -69,8 +69,8 @@
 
 	<div class="content">
 		<div class="contact-profile">
-			<img src="https://img.pngio.com/friends-group-group-chat-group-conversation-users-icon-group-conversation-png-512_512.png" alt="">
-			<p>GENERAL CHAT</p>
+			<img src="<%=ToUser.img%>" alt="">
+			<p><%=ToUser.name%></p>
 			<div class="social-media">
 				<i class="fa fa-facebook" aria-hidden="true"></i>
 				<i class="fa fa-twitter" aria-hidden="true"></i>
@@ -102,119 +102,121 @@
             </form>
         </div>
     </div>
-    <%- include("blocks/scripts")%>
 
-    <script>
-        var btnChange = document.getElementById("changeProfile");
-        btnChange.addEventListener("click", function () {
-            var changeProfileForm = document.getElementById("changeProfileForm");
-            changeProfileForm.classList.toggle("ShowProfile");
-        })
-    </script>
+</body>
 
-    <script>
+<%- include("blocks/scripts")%>
 
-        const socket = io();
+<script>
+    var btnChange = document.getElementById("changeProfile");
+    btnChange.addEventListener("click", function () {
+        var changeProfileForm = document.getElementById("changeProfileForm");
+        changeProfileForm.classList.toggle("ShowProfile");
+    })
+</script>
 
-        //sort user trạng thái , cho người online lên đầu
-        function sortUser() {
-            let allUser = document.getElementsByClassName("contact-left");
-            for (let i = 0; i < allUser.length - 1; i++) {
-                for (let j = i + 1; j < allUser.length; j++) {
-                    if (allUser[i].children[0].children[0].style.background == "red" && allUser[j].children[0].children[0].style.background == "green") {
-                        allUser[j].parentNode.insertBefore(allUser[j], allUser[i]);
-                    }
+<script>
 
+    const socket = io();
+
+    //sort user trạng thái , cho người online lên đầu
+    function sortUser() {
+        let allUser = document.getElementsByClassName("contact-left");
+        for (let i = 0; i < allUser.length - 1; i++) {
+            for (let j = i + 1; j < allUser.length; j++) {
+                if (allUser[i].children[0].children[0].style.background == "red" && allUser[j].children[0].children[0].style.background == "green") {
+                    allUser[j].parentNode.insertBefore(allUser[j], allUser[i]);
                 }
+
             }
         }
+    }
 
-        //#endregion
-        //Khi phát hiện có người mới load vào từ client
-        document.addEventListener("DOMContentLoaded", function () {
-            socket.emit("form-client-showUserOnline", {
-                id: "<%=myUser._id%>",
-            })
-            var contacts = document.getElementById("contacts");
-            sortUser();
+    //#endregion
+    //Khi phát hiện có người mới load vào từ client
+    document.addEventListener("DOMContentLoaded", function () {
+        socket.emit("form-client-showUserOnline", {
+            id: "<%=myUser._id%>",
+        })
+        var contacts = document.getElementById("contacts");
+        sortUser();
 
 
 
-                    
-        var allUserAtag = document.getElementsByClassName("contact-left-father");
-        var allUser = document.getElementsByClassName("contact-left");
-        //#region Private chat
+                
+    var allUserAtag = document.getElementsByClassName("contact-left-father");
+    var allUser = document.getElementsByClassName("contact-left");
+    //#region Private chat
 
-        //Khi click thi render qua private chat
-        for (let i = 0; i < allUserAtag.length; i++) {
-            var curID = allUser[i].children[0].children[0].id;
-            allUserAtag[i].setAttribute('href',"/chatbox/" + curID);
-        }
+    //Khi click thi render qua private chat
+    for (let i = 0; i < allUserAtag.length; i++) {
+        var curID = allUser[i].children[0].children[0].id;
+        allUserAtag[i].setAttribute('href',"/chatbox/" + curID);
+    }
 
+    });
+
+
+    //emit mess lên server
+    $('#formMess').submit(function (e) {
+        e.preventDefault(); // prevents page reloading
+        socket.emit('from-client-chat-mess-private', {
+            from : '<%=myUser._id%>' ,
+            to : window.location.href.split("/")[4],
+            content: $('#mess').val(),
+            name: document.getElementById("profileName").textContent,
+            img: '<%=myUser.img%>',
         });
+        $('#mess').val('');
+        return false;
+    });
 
+    
 
-        //emit mess lên server
-        $('#formMess').submit(function (e) {
-            e.preventDefault(); // prevents page reloading
-            socket.emit('from-client-chat-mess-private', {
-                from : '<%=myUser._id%>' ,
-                to : window.location.href.split("/")[4],
-                content: $('#mess').val(),
-                name: document.getElementById("profileName").textContent,
-                img: '<%=myUser.img%>',
-            });
-            $('#mess').val('');
-            return false;
-        });
-
-        
-
-        // Append mess vào chatlog
-        socket.on("from-server-chat-mess", function (msg) {
-            var stringAppend = `<li class="contact">
-                            <div class="wrap">
-                                <span class="contact-status"></span>
-                                <img src="${msg.img}" alt="">
-                                <div class="meta">
-                                    <p class="name">${msg.name}</p>
-                                    <p class="preview"> ${msg.content} </p>
-                                </div>
+    // Append mess vào chatlog
+    socket.on("from-server-chat-mess", function (msg) {
+        var stringAppend = `<li class="contact">
+                        <div class="wrap">
+                            <span class="contact-status"></span>
+                            <img src="${msg.img}" alt="">
+                            <div class="meta">
+                                <p class="name">${msg.name}</p>
+                                <p class="preview"> ${msg.content} </p>
                             </div>
-                            </li>`
+                        </div>
+                        </li>`
 
-            $('#chatlog').append(stringAppend);
-            var objDiv = document.getElementById("messages-log");
-            objDiv.scrollTop = objDiv.scrollHeight;
-        })
-
-
-        //set color status ban đầu do class bị lỗi nên tự set bằng script
-        var status = document.getElementsByName("busy");
-        for (let i = 0; i < status.length; i++) {
-            status[i].style.color = "red";
-        }
+        $('#chatlog').append(stringAppend);
+        var objDiv = document.getElementById("messages-log");
+        objDiv.scrollTop = objDiv.scrollHeight;
+    })
 
 
-        //set status online cho user
-        socket.on("from_sever_showUserOnline", function (data) {
-            var user = document.getElementById(data.id);
-            user.style.background = "green";
+    //set color status ban đầu do class bị lỗi nên tự set bằng script
+    var status = document.getElementsByName("busy");
+    for (let i = 0; i < status.length; i++) {
+        status[i].style.color = "red";
+    }
 
-            sortUser();
-        })
 
-        // Khi có người offline(disconect)
-        socket.on("from_sever_showUserOffline", function (data) {
-            var user = document.getElementById(data.id);
-            user.style.background = "red";
-            sortUser();
-        })
+    //set status online cho user
+    socket.on("from_sever_showUserOnline", function (data) {
+        console.log(data);
+        var user = document.getElementById(data.id);
+        user.style.background = "green";
+
+        sortUser();
+    })
+
+    // Khi có người offline(disconect)
+    socket.on("from_sever_showUserOffline", function (data) {
+        var user = document.getElementById(data.id);
+        user.style.background = "red";
+        sortUser();
+    })
 
 
 //sort user online
 
-    </script>
-</body>
-
+</script>
 </html>

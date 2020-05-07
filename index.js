@@ -55,7 +55,6 @@ io.on("connection", function (socket) {
 
     //save socket to referID like as key
     // and _id like as value
-
     //Khi co nguoi load thi set map , dong thoi sua trong db la online
     socket.on("form-client-showUserOnline", function (data) {
 
@@ -97,7 +96,6 @@ io.on("connection", function (socket) {
 
     //xu ly thoat trang web
     socket.on("disconnect", () => {
-
         //Edit status in db
         var idOut = referID.get(socket.id);
         
@@ -181,10 +179,6 @@ app.get("/chatbox", async (req, res) => {
 app.get("/chatbox/:id",  async (req, res) => {
 
    
-    // var myChatlog = await privateChatModel.find(
-    //     {from : req.signedCookies.userID,
-    //      to : req.param.id   
-    // });
     var myChatlog = await privateChatModel.find({
        $or : [
            {
@@ -199,6 +193,8 @@ app.get("/chatbox/:id",  async (req, res) => {
 
        ]
     });
+
+    var ToUser = await userModel.find({_id : req.params.id})
 
     userModel.find(function (err, data) {
         if (err)
@@ -218,12 +214,12 @@ app.get("/chatbox/:id",  async (req, res) => {
             }
             return true;
         })
-
-
         res.render("privatechat", {
             listUser: listUser,
             myUser: myUser,
             ChatLog: myChatlog,
+            ToUser : ToUser[0]
+            
         });
     })
 })
@@ -235,7 +231,8 @@ app.post("/login", controller_login.login)
 
 // req.file.path.split("\\").splice(1).join("/")
 app.post("/edit/:id", upload.single('avatar'), (req, res) => {
-    if (!req.file.path) {
+
+    if (!req.file) {
         var query = { _id: req.params.id };
         var update = { name: req.body.name };
         userModel.findOneAndUpdate(query, update, function (err) {
@@ -246,6 +243,8 @@ app.post("/edit/:id", upload.single('avatar'), (req, res) => {
         })
     }
     else {
+        console.log(req.file.path);
+        console.log("_________________________");
         var query = { _id: req.params.id };
         var update = { name: req.body.name, img: req.file.path.split("\\").splice(1).join("/") };
         userModel.findOneAndUpdate(query, update, function (err) {
