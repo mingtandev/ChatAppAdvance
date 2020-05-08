@@ -10,18 +10,5 @@
     <video src="" id="localStream" width="1000" controls></video>
 </body>
 
-
-    <script>
-        navigator.mediaDevices.getUserMedia({audio:false,video:true})
-        .then(function(stream){
-            var video = document.getElementById('localStream');
-            video.srcObject = stream;
-            video.onloadedmetadata = function(e) {
-            video.play();
-            };
-        })
-        .catch(function(err){
-
-        })
-    </script>
+<script src="bundle.js"></script>
 </html>
