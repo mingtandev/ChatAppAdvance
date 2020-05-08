@@ -275,4 +275,12 @@ app.post("/registering", (req, res) => {
     res.redirect("/register?valid=1");
 })
 
+
+
+//DEMO VIDEO CALL
+
+app.get("/videocall",(req,res)=>{
+    res.render("stream");
+})
+
 server.listen(3000);
