@@ -19,6 +19,8 @@
     "socket.io-client": "^2.3.0"
   },
   "devDependencies": {
+    "jquery": "^3.5.1",
+    "simple-peer": "^9.7.0",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11"
   }
