@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stream</title>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@0.3.20/dist/peer.min.js"></script>
+
 </head>
 <body>
-    <h2>Ming Tan</h2>
+    <h2 id="idConnect">Your ID : </h2>
     <video src="" id="localStream" width="1000" controls></video>
     <br>
     <video src="" id="friendStream" width="1000" controls></video>
     <br>
-    <textarea name="" id="txtSignal" cols="30" rows="10"></textarea>
-    <br>
-    <input type="text" id="inputToken">
+    <input type="text" id="remote-id">
     <br>
     <button id="connectBtn" >Connect</button>
 </body>
