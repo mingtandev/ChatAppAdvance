@@ -1,8 +1,34 @@
 <%- include("blocks/header.ejs")%>
+<script src="socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@0.3.20/dist/peer.min.js"></script>
 
 <body>
 
-    <script src="socket.io/socket.io.js"></script>
+    <button id="showNotifiCall" type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+        Sombody call you
+      </button>
+    
+      <!-- Modal -->
+      <div class="modal fade" id="exampleModal" style="transform: translateX(-40%); width: 100%; " tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Somebody call you</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+            
+            </div>
+            <div class="modal-footer" style="justify-content: left;">
+              <button type="button"  class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              <button id="AcceptBtn"  type="button" class="btn btn-primary">Accept</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
     <div id="frame">
         <div id="sidepanel">
@@ -102,6 +128,9 @@
             </form>
         </div>
     </div>
+
+
+
 </body>
 
 <%- include("blocks/scripts")%>
@@ -159,6 +188,9 @@ for (let i = 0; i < allUserAtag.length; i++) {
 }
 
 //#endregion
+
+
+
 //Khi phát hiện có người mới load vào từ client
 document.addEventListener("DOMContentLoaded", function () {
    socket.emit("form-client-showUserOnline", {
@@ -170,6 +202,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+//#region  SocketON
 //set status online cho user
 socket.on("from_sever_showUserOnline", function (data) {
    var user = document.getElementById(data.id);
@@ -204,13 +237,73 @@ socket.on("from-server-chat-mess", function (msg) {
 })
 
 
+//#endregion
+
 //set color status ban đầu do class bị lỗi nên tự set bằng script
 var status = document.getElementsByName("busy");
 for (let i = 0; i < status.length; i++) {
    status[i].style.color = "red";
 }
 
+</script>
 
+
+<!--Xet peer js-->
+<script>
+const peer = new Peer({key : "<%=keyPeer%>"});
+
+peer.on('open',(id)=>{
+    socket.emit("createPeerID",id);
+    console.log(id);
+});
+
+
+
+var currCall;
+peer.on('call',function(call){
+
+    $('#showNotifiCall').trigger('click');
+    currCall=call;
+   
+})
+
+let des;
+let src;
+let peerSrc;
+socket.on("link-to-open",(msg)=>{
+    des = msg.des,
+    src = msg.src,
+    peerSrc = msg.peerSrc
+})
+
+$('#AcceptBtn').click(()=>{
+    var myWindow = window.open(window.location.href  +"/" + des +"/" + src +"/videocall?src="+peerSrc, "callWindow", "width=800px,height=600px");
+        // openCamera(function(stream){
+        //     //Trả lời answer và truyền lại stream của chính mình
+        //     currCall.answer(stream)
+        //     // dòng trên khới tạo kết nối của chính mình
+        //     //gọi call on để  nhận được stream từ peer bên kia khi được trả lời
+        //     currCall.on('stream',friendStram => {
+        //         playVideo(friendStram, 'friendStream');
+        //     })
+        // })
+
+        //Roi lam tiep
+    
+})
+
+// $('#AcceptBtn').click(()=>{
+//         openCamera(function(stream){
+//             //Trả lời answer và truyền lại stream của chính mình
+//             currCall.answer(stream)
+//             // dòng trên khới tạo kết nối của chính mình
+//             //gọi call on để  nhận được stream từ peer bên kia khi được trả lời
+//             currCall.on('stream',friendStram => {
+//                 playVideo(friendStram, 'friendStream');
+//             })
+//         })
+    
+// })
 
 
 

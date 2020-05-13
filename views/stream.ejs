@@ -1,22 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
+  <script src="/jquery.js"></script>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream</title>
-    <script src="https://cdn.jsdelivr.net/npm/peerjs@0.3.20/dist/peer.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream</title>
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@0.3.20/dist/peer.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="/socket.io/socket.io.js"></script>
 
 </head>
-<body>
-    <h2 id="idConnect">Your ID : </h2>
-    <video src="" id="localStream" width="1000" controls></video>
-    <br>
-    <video src="" id="friendStream" width="1000" controls></video>
-    <br>
-    <input type="text" id="remote-id">
-    <br>
-    <button id="connectBtn" >Connect</button>
-</body>
 
-<script src="/bundle.js"></script>
+<body>
+  <h2 id="idConnect">Your ID :
+    <!--  -->
+
+  </h2>
+  <video src="" id="localStream" width="1000" controls></video>
+  <br>
+  <video src="" id="friendStream" width="1000" controls></video>
+  <br>
+  <input type="text" id="remote-id">
+  <br>
+  <button id="connectBtn">Connect</button>
+
+
+  <!-- Button trigger modal -->
+
+</body>
+<script src="/bundle.js"></script>\
+<script>
+  const socket = io();
+
+  const peer = new Peer({ key: "<%=keyPeer%>" });
+  var myUserID = window.location.href.split("/")[5];
+  var peerID;
+
+  peer.on('open', (id) => {
+    socket.emit("createPeerID", id);
+    peerID = id;
+    console.log(id);
+    socket.emit("from-client-videocall-notifi", {
+      peerID : peerID,
+      src: window.location.href.split("/")[5],
+      des: window.location.href.split("/")[4]
+    })
+  });
+
+
+  
+
+
+
+  function playVideo(stream, idVideo) {
+    var video = document.getElementById(idVideo);
+    video.srcObject = stream;
+    video.onloadedmetadata = function (e) {
+      video.play();
+    };
+  }
+
+
+  function OpenCamera(callback) {
+    navigator.mediaDevices.getUserMedia({ audio: false, video: true })
+      .then(function (stream) {
+        //Chủ yếu là lấy tham số stream ra khỏi tác vụ bất đồng bộ
+        callback(stream);
+      })
+      .catch(function (err) {
+
+      })
+
+  }
+
+
+//   $('#connectBtn').click(()=>{
+//     friendID = $('#remote-id').val();
+//     OpenCamera(function(stream){
+//         //truyền vào id cần gọi tới và stream của mình 
+//         playVideo(stream, 'localStream');
+
+//         const call = peer.call(friendID,stream)
+//         //Event lắng nghe khi có call gọi tới , vì khi có kết nối thì call cung cấp stream của peer phía bên kia
+//        // Sẽ hiện stream nếu phía bên kia trả lời được
+//         call.on('stream',friendStram => {
+//             playVideo(friendStram, 'friendStream');
+//         })
+//     })
+// })
+let isCall = false;
+let friendID;
+'<% if(typeof peersrc!="undefined" ){ %>'
+          friendID = "<%=peersrc%>";
+
+'<%}%>'
+
+console.log(isCall)
+if(friendID!='undefined'){
+  OpenCamera(function(stream){
+        //truyền vào id cần gọi tới và stream của mình 
+        playVideo(stream, 'localStream');
+        const call = peer.call(friendID,stream)
+        //Event lắng nghe khi có call gọi tới , vì khi có kết nối thì call cung cấp stream của peer phía bên kia
+       // Sẽ hiện stream nếu phía bên kia trả lời được
+        call.on('stream',friendStram => {
+            playVideo(friendStram, 'friendStream');
+        })
+    });
+}
+peer.on('call',function(call){
+
+    OpenCamera(function(stream){
+        //Trả lời answer và truyền lại stream của chính mình
+        call.answer(stream)
+        // dòng trên khới tạo kết nối của chính mình
+        //gọi call on để  nhận được stream từ peer bên kia khi được trả lời
+        call.on('stream',friendStram => {
+            playVideo(friendStram, 'friendStream');
+        })
+    })
+
+   
+})
+
+
+
+
+
+  socket.on("call-to-peerDes", (data) => {
+
+    OpenCamera(function(stream){
+      playVideo(stream, 'localStream');
+      const call = peer.call(data.peerDes, stream)
+      call.on('stream',friendStram => {
+            playVideo(friendStram, 'friendStream');
+        })
+    });
+
+  })
+
+
+  document.addEventListener("DOMContentLoaded", function () {
+    socket.emit("form-client-showUserOnline", {
+      id: myUserID,
+    })
+  });
+
+
+</script>
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+  integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+  integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+  integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
 </html>

@@ -1,4 +1,5 @@
 <%- include("blocks/header.ejs")%>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@0.3.20/dist/peer.min.js"></script>
 
 <body>
 
@@ -72,6 +73,7 @@
 			<img src="<%=ToUser.img%>" alt="">
 			<p><%=ToUser.name%></p>
 			<div class="social-media">
+                <i id="video-call" class="fa fa-video-camera" aria-hidden="true"></i>
 				<i class="fa fa-facebook" aria-hidden="true"></i>
 				<i class="fa fa-twitter" aria-hidden="true"></i>
 				 <i class="fa fa-instagram" aria-hidden="true"></i>
@@ -113,7 +115,12 @@
         var changeProfileForm = document.getElementById("changeProfileForm");
         changeProfileForm.classList.toggle("ShowProfile");
     })
+
+    $('#video-call').click(()=>{
+        var myWindow = window.open(window.location.href  +"/<%=myUser._id%>" +"/videocall", "callWindow", "width=800px,height=600px");
+    })
 </script>
+
 
 <script>
 
@@ -174,7 +181,7 @@
     
 
     // Append mess vào chatlog
-    socket.on("from-server-chat-mess", function (msg) {
+    socket.on("from-server-chat-mess-private", function (msg) {
         var stringAppend = `<li class="contact">
                         <div class="wrap">
                             <span class="contact-status"></span>
@@ -217,6 +224,16 @@
 
 
 //sort user online
-
 </script>
+
+<script>
+const peer = new Peer({key : "<%=keyPeer%>"});
+
+peer.on('open',(id)=>{
+    socket.emit("createPeerID",id);
+    console.log(id);
+});
+</script>
+
+
 </html>

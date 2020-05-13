@@ -45,9 +45,9 @@ var privateChatModel = require("./models/PrivateChat");
 
 
 //One map to refer between socket id and objectID(user)
-
 var referID = new Map();
-
+//Other map refer between id and peer ID ( call video )
+var referPeerID = new Map();
 
 //socket io
 
@@ -56,10 +56,19 @@ io.on("connection", function (socket) {
     //save socket to referID like as key
     // and _id like as value
     //Khi co nguoi load thi set map , dong thoi sua trong db la online
+    socket.on("createPeerID",function(peerID){
+        referPeerID.set(socket.id , peerID);
+        console.log("Socket-PeerID");
+        console.log(referPeerID)
+    })
+    
+
     socket.on("form-client-showUserOnline", function (data) {
 
         //save key is data id , socket id is value , when socket modifily => only change value
         referID.set(socket.id, data.id);
+        console.log("Socket-ID");
+        console.log(referID)
 
         userModel.findOneAndUpdate({ _id: data.id }, { status: "online" }, function (err, data) {
             if (err) {
@@ -69,6 +78,9 @@ io.on("connection", function (socket) {
         });
         socket.broadcast.emit("from_sever_showUserOnline", data);
     })
+    
+
+    //server nhan mess tu client
     socket.on("from-client-chat-mess", function (msg) {
         var newChat = chatModel({
             content: msg.content,
@@ -81,6 +93,8 @@ io.on("connection", function (socket) {
 
 
 
+
+    //char private
     socket.on("from-client-chat-mess-private", function (msg) {
         var newChat = privateChatModel({
             from : msg.from,
@@ -90,7 +104,7 @@ io.on("connection", function (socket) {
             img: msg.img,
         })
         newChat.save();
-        io.sockets.emit("from-server-chat-mess", msg);
+        io.sockets.emit("from-server-chat-mess-private", msg);
     })
 
 
@@ -106,12 +120,39 @@ io.on("connection", function (socket) {
         })
 
         referID.delete(socket.id);
+        referPeerID.delete(socket.id);
+        
 
         socket.broadcast.emit("from_sever_showUserOffline", {
             id : idOut
         });
     })
 
+    //Show de hien thong bao yeu cuoc goi
+    socket.on("from-client-videocall-notifi",(data)=>{
+        //tu ID => tim ra socketid cua des
+        let socketDes;
+        for(let [key,value] of referID){
+            if(value==data.des){
+                socketDes=key;
+            }
+        }
+        //sau khi lay duoc socketDes => emit peer cua no
+        let peerDes
+        for(let [key,value] of referPeerID){
+            if(key==socketDes){
+                peerDes=value;
+            }
+        }
+        socket.emit("call-to-peerDes",{
+            peerDes:peerDes,
+        })
+        io.to(socketDes).emit("link-to-open",{
+            src:data.src,
+            des : data.des,
+            peerSrc : data.peerID
+        });
+    })
 
 
 })
@@ -169,6 +210,7 @@ app.get("/chatbox", async (req, res) => {
             listUser: listUser,
             myUser: myUser,
             ChatLog: myChatlog,
+            keyPeer : 'lwjd5qra8257b9'
         });
     })
 })
@@ -218,10 +260,22 @@ app.get("/chatbox/:id",  async (req, res) => {
             listUser: listUser,
             myUser: myUser,
             ChatLog: myChatlog,
-            ToUser : ToUser[0]
-            
+            ToUser : ToUser[0],
+            keyPeer : 'lwjd5qra8257b9'
+
         });
     })
+})
+
+app.get("/chatbox/:id_des/:id_src/videocall",  (req, res) => {
+
+
+    res.render("stream",{
+        keyPeer : 'lwjd5qra8257b9',
+        peersrc : req.query.src
+    });
+
+
 })
 
 
@@ -277,8 +331,5 @@ app.post("/registering", (req, res) => {
 
 //DEMO VIDEO CALL
 
-app.get("/videocall",(req,res)=>{
-    res.render("stream");
-})
 
 server.listen(3000);
